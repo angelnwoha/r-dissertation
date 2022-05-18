@@ -1,0 +1,60 @@
+#In this is the code used for my dissertation on the effects of remittances on economic growth in Sub-Saharan Africa
+#The data was gathered from the World Bank and the Global Knowledge Partnership on Migration and Development
+#In this, I choose between a standard pooled Ordinary Least Squares model and a fixed effects model.
+
+remit2 <- read.csv("full data2.csv")
+pacman::p_load(lme4, foreign, plm, mosaic, stargazer, ggplot2, lmtest)
+remit2$remittance.growth  <- as.numeric(remit2$remittance.growth)
+remit2$year <- factor(remit2$year)
+remit2.dat <- pdata.frame(remit2, index = c("country", "year"))
+
+#Pooled OLS models
+mod.remit.pool1 <- plm(gdp ~ remittance.growth, data = remit2.dat, model = "pooling")
+bptest(mod.remit.pool1)
+mod.remit.pool2 <- plm(gdp ~ remittance.growth + exports, data = remit2.dat, model = "pooling")
+bptest(mod.remit.pool2)
+mod.remit.pool3 <- plm(gdp ~ remittance.growth + labour, data = remit2.dat, model = "pooling")
+bptest(mod.remit.pool3)
+mod.remit.pool4 <- plm(gdp ~ remittance.growth + exports + labour, data = remit2.dat, model = "pooling")
+bptest(mod.remit.pool4)
+stargazer(mod.remit.pool1, mod.remit.pool2, mod.remit.pool3, mod.remit.pool4, type = "html", 
+          title = "Table 1: Regression results - Pooled OLS", 
+          out = "table1.htm)
+          
+mod.remit.pool5 <- plm(gdp ~ remittance.growth + exports + labour + remittance.growth:exports + remittance.growth:labour + remittance.growth:exports:labour, 
+                       data = remit2.dat, 
+                       model = "pooling")
+stargazer(mod.remit.pool5, type = "html", 
+          title = "Table 2: Regression results - Pooled OLS with interactions", 
+          out = "table2.htm)
+          
+#Fixed Effect models
+mod.remit.fe2 <- plm(gdp ~ remittance.growth + exports, data = remit2.dat, model = "within")
+bptest(mod.remit.fe2)
+
+mod.remit.fe3 <- plm(gdp ~ remittance.growth + labour, data = remit2.dat, model = "within")
+bptest(mod.remit.fe3)
+mod.remit.fe4 <- plm(gdp ~ remittance.growth + exports + labour, data = remit2.dat, model = "within")
+bptest(mod.remit.fe4)
+stargazer(mod.remit.fe2, mod.remit.fe3, mod.remit.fe4, type = "html", 
+          title = "Table 3: Regression results - Fixed Effects", 
+          out = "table3.htm)
+
+mod.remit.fe5 <- plm(gdp ~ remittance.growth + exports + labour + remittance.growth:exports + remittance.growth:labour + remittance.growth:exports:labour, 
+                    data = remit2.dat, 
+                    model = "within")
+stargazer(mod.remit.fe5, type = "html", 
+          title = "Table 4: Regression results - Fixed Effects with interactions", 
+          out = "table4.htm)
+ 
+#As there was heteroscedastity found in my previous models, I took the log of gdp in order to correct this.
+#Fixed Effect with logged dependent variable model
+log.mod.remit.fe1 <- plm(log(gdp) ~ remittance.growth + exports + labour, data = remit2.dat, model = "within")
+bptest(log.mod.remit.fe1)
+log.mod.remit.fe2 <- plm(log(gdp) ~ remittance.growth + exports + labour + remittance.growth:exports + remittance.growth:labour + remittance.growth:exports:labour, 
+                         data = remit2.dat, 
+                         model = "within")
+bptest(log.mod.remit.fe2)
+stargazer(log.mod.remit.fe1, log.mod.remit.fe2, type = "html", 
+          title = "Table 5: Regression results - Fixed Effects with log tranformed dependent variable", 
+          out = "table5.htm)
